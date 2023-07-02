@@ -1,6 +1,7 @@
 use std::io::prelude::*;
 use std::io;
 use std::fs::OpenOptions;
+use std::time::Duration;
 
 //to debug
 //use std::time::Duration;
@@ -54,6 +55,11 @@ fn bardecode(pathtoimage : String, mut sepwords : Vec<String>) -> Vec<String>{
     else {
         isfirst = false;
     }
+    if isfirst {
+        for linee in finalstring.lines() {
+            sepwords.push(linee.to_string()); 
+        } 
+    }
 
     //if its not not its first run read, store price from last cycle
     if !isfirst.clone() {
@@ -63,12 +69,7 @@ fn bardecode(pathtoimage : String, mut sepwords : Vec<String>) -> Vec<String>{
         //ensure safety in  future upadtes i.e leftover code
         lastprice = 0;
     }
-    if isfirst {
-        for linee in finalstring.lines() {
-            sepwords.push(linee.to_string()); 
-        } 
-    }
-    
+      
 
     let mut readfile: Vec<String> = Vec::new();
 
@@ -76,7 +77,7 @@ fn bardecode(pathtoimage : String, mut sepwords : Vec<String>) -> Vec<String>{
             readfile.push(linee.to_string()); 
         }
 
-    let price = (readfile[0].parse::<i32>().unwrap() + lastprice.clone()).to_string();
+    let price = (readfile[0].parse::<i32>().unwrap_or_default() + lastprice.clone()).to_string();
     
     //sepwords.remove(0);
     sepwords.remove(0);
@@ -93,6 +94,7 @@ fn bardecode(pathtoimage : String, mut sepwords : Vec<String>) -> Vec<String>{
 fn barcodegenerator(data: String) {
     qrcode_generator::to_png_to_file(data.clone(), QrCodeEcc::Low, 1024, data + ".png").unwrap();
 }
+
 fn admin() {
     let mut input = String::new();
     let random_number = rand::thread_rng().gen_range(1..=1000000000);
@@ -106,8 +108,6 @@ fn admin() {
     println!("Enter the price of the product");
 
     io::stdin().read_line(&mut input).expect("failed to read msg");
-    
-    write!(file ,"$").expect("failed to but $ sign xd");
  
     println!("Enter the name of the product");
 
@@ -127,24 +127,105 @@ fn admin() {
         barcodegenerator(random_number.to_string());
 
 }
+fn checkout(mut sepwords : Vec<String>) -> String {
+    let mut input: String = String::new();
+    loop {
+        input.clear();
+        println!("Do you want to convert the price to another currency?\n0) No\n1) Yes\n2) Exit");
+        io::stdin().read_line(&mut input).expect("failed to read msg");
+        clear_console();
+        if input.trim() == "1" {
+            println!("1) Euro\n2) Dollar(US)\n3) Dollar(CAD)\n4) Yen");
+            //modify vector to converted price
+            let mut numbers: String = String::new();
+            numbers.clear();
+            io::stdin().read_line(&mut numbers).expect("failed to read msg");
+            match numbers.as_str().trim() {
+                "1" => {
+                    let originalnum: f64 = sepwords[0].clone().parse().unwrap();
+                    sepwords[0] = (originalnum / 400.0).to_string();
+                }
+                "2" => {
+                    let originalnum: f64 = sepwords[0].clone().parse().unwrap();
+                    sepwords[0] = (originalnum / 351.0).to_string();
+                }
+                "3" => {
+                    let originalnum: f64 = sepwords[0].clone().parse().unwrap();
+                    sepwords[0] = (originalnum / 280.0).to_string();
+                }
+                "4" => {
+                    let originalnum: f64 = sepwords[0].clone().parse().unwrap();
+                    sepwords[0] = (originalnum / 2.3).to_string();
+                }
+                //default
+                _ => {
+                println!("Enter a vaild option!");
+                std::thread::sleep(Duration::from_secs(2));
+                clear_console();
+                }
+            }
+            //force checkout
+            input = "2".to_owned();
+            continue;
+        }
+        else if input.trim() == "0" {
+            println!("Final price : {}", sepwords[0].clone());
+            println!("Items : ");
+            for i in 1..sepwords.len() {
+                println!("{}", sepwords[i]);
+            }
+            println!("Pay with : \n1) Credit Card\n2) Cash");
+            let mut _anyad = Default::default();
+            io::stdin().read_line(&mut _anyad).expect("failed to read msg");
+            clear_console();
+            return "q".to_owned();
+        }
+        else if input.trim() == "2" {
+            return "n".to_owned();
+        }
+        else {
+            println!("Enter a vaild option!");
+            std::thread::sleep(Duration::from_secs(3));
+            clear_console();
+        }    
+    }
+    
+}
 fn user() {
     clear_console();
     //init vec (self note: Marci te autista)
     let mut sepwords:Vec<String> = Vec::new();
     loop {
-        
+        let mut checkt = String::new();
         let mut input = String::new();
-        println!("{}", input);
-        println!("Enter the name of the picture having the barcode, to quit type in 'quit'");
+        println!("To checkout, enter 'c'");
+        println!("Enter the name of the picture having the barcode, to quit type in 'q'");
         io::stdin().read_line(&mut input).expect("failed to read msg");
-        if input.trim() == "quit" {
+        clear_console();
+        if input.trim() == "c" {
+            if sepwords.len() == 0 {
+                println!("You dont have anything in your basket!");
+                std::thread::sleep(Duration::from_secs(3));
+                clear_console();
+                continue;
+            }
+            else {
+                checkt = checkout(sepwords.clone());    
+                clear_console();
+                if checkt == "q"{
+                    break;
+                }
+            }
+        }
+        
+        if input.trim() == "q"{
             break;
         }
+        
         //initalize vector so we can store data from last cycle (self note: Nagyon hülye vagy)
         clear_console();
         sepwords = bardecode(input, sepwords);
-
-        println!("Price : {}", sepwords[0]);
+        println!("Price : {} Ft", sepwords[0]);
         println!("Shopping cart : ");
         for i in 1..sepwords.len() {
             println!("{}", sepwords[i]);
@@ -171,5 +252,6 @@ fn main() {
         else {
             continue;
         }
+        
     }
 }
