@@ -143,19 +143,19 @@ fn checkout(mut sepwords : Vec<String>) -> String {
             match numbers.as_str().trim() {
                 "1" => {
                     let originalnum: f64 = sepwords[0].clone().parse().unwrap();
-                    sepwords[0] = (originalnum / 400.0).to_string();
+                    sepwords[0] = (originalnum / 400.0).to_string() + "€";
                 }
                 "2" => {
                     let originalnum: f64 = sepwords[0].clone().parse().unwrap();
-                    sepwords[0] = (originalnum / 351.0).to_string();
+                    sepwords[0] = (originalnum / 351.0).to_string() + "$";
                 }
                 "3" => {
                     let originalnum: f64 = sepwords[0].clone().parse().unwrap();
-                    sepwords[0] = (originalnum / 280.0).to_string();
+                    sepwords[0] = (originalnum / 280.0).to_string() + "$";
                 }
                 "4" => {
                     let originalnum: f64 = sepwords[0].clone().parse().unwrap();
-                    sepwords[0] = (originalnum / 2.3).to_string();
+                    sepwords[0] = (originalnum / 2.3).to_string() + " yen";
                 }
                 //default
                 _ => {
@@ -165,10 +165,10 @@ fn checkout(mut sepwords : Vec<String>) -> String {
                 }
             }
             //force checkout
-            input = "2".to_owned();
-            continue;
+            input = "0".to_owned();
         }
-        else if input.trim() == "0" {
+        if input.trim() == "0" {
+            clear_console();
             println!("Final price : {}", sepwords[0].clone());
             println!("Items : ");
             for i in 1..sepwords.len() {
